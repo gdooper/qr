@@ -240,19 +240,20 @@ class PriorityQueue(BaseQueue):
     
     def dump(self, fobj):
         """Destructively dump the contents of the queue into fp"""
-        next = self.pop()
-        while next:
-            self.serializer.dump(next[0], fobj)
-            next = self.pop()
+        next = self.pop(True)
+        while next[0] is not None:
+            self.serializer.dump(next, fobj)
+            next = self.pop(True)
     
     def load(self, fobj):
         """Load the contents of the provided fobj into the queue"""
         try:
+            items = []
             while True:
-                value, score = self.serializer.load(fobj)
-                self.redis.zadd(self.key, value, score)
+                items.append(self.serializer.load(fobj))
         except Exception as e:
-            return
+            self.extend(items)
+
     
     def dumpfname(self, fname, truncate=False):
         """Destructively dump the contents of the queue into fname"""
